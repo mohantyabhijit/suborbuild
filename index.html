@@ -1,0 +1,2047 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Subscribe or Build?</title>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💲</text></svg>">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+        <style>
+            :root {
+                --background: #f8f9fa;
+                --foreground: #0a0a0a;
+                --card: #ffffff;
+                --muted: #ececf0;
+                --muted-foreground: #717182;
+                --border: rgba(0, 0, 0, 0.1);
+                --input-background: #f3f3f5;
+                --ring: #b0b0b0;
+                --radius: 0.75rem;
+                --font-weight-medium: 500;
+                --font-weight-normal: 400;
+                --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+                --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+                --cat-glow: rgba(244, 163, 74, 0.15);
+                --subscribe-bg: linear-gradient(
+                    to bottom right,
+                    #eff6ff,
+                    #eef2ff
+                );
+                --subscribe-border: #bfdbfe;
+                --subscribe-color: #1e40af;
+                --subscribe-badge-bg: #dbeafe;
+                --build-bg: linear-gradient(to bottom right, #f0fdf4, #ecfdf5);
+                --build-border: #bbf7d0;
+                --build-color: #047857;
+                --build-badge-bg: #dcfce7;
+                --verdict-sub-bg: #eef2ff;
+                --verdict-sub-color: #1e40af;
+                --verdict-build-bg: #f0fdf4;
+                --verdict-build-color: #047857;
+            }
+
+            html.dark {
+                --background: #111118;
+                --foreground: #e4e4e7;
+                --card: #1c1c24;
+                --muted: #27272f;
+                --muted-foreground: #9898a6;
+                --border: rgba(255, 255, 255, 0.08);
+                --input-background: #22222a;
+                --ring: #555;
+                --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+                --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+                --cat-glow: rgba(244, 163, 74, 0.08);
+                --subscribe-bg: linear-gradient(
+                    to bottom right,
+                    #1e2a4a,
+                    #1e2244
+                );
+                --subscribe-border: #2563eb44;
+                --subscribe-color: #60a5fa;
+                --subscribe-badge-bg: #1e3a5f;
+                --build-bg: linear-gradient(to bottom right, #14332a, #12302a);
+                --build-border: #16a34a44;
+                --build-color: #4ade80;
+                --build-badge-bg: #14382a;
+                --verdict-sub-bg: #1e2a4a;
+                --verdict-sub-color: #60a5fa;
+                --verdict-build-bg: #14332a;
+                --verdict-build-color: #4ade80;
+            }
+
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                    "Helvetica Neue", Arial, sans-serif;
+                font-size: 16px;
+                line-height: 1.5;
+                color: var(--foreground);
+                background: var(--background);
+                transition:
+                    background 0.3s,
+                    color 0.3s;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+                font-weight: var(--font-weight-medium);
+                line-height: 1.4;
+            }
+            h2 {
+                font-size: 1.25rem;
+                font-weight: var(--font-weight-medium);
+                line-height: 1.4;
+            }
+            h3 {
+                font-size: 1.125rem;
+                font-weight: var(--font-weight-medium);
+                line-height: 1.4;
+            }
+            h4 {
+                font-size: 1rem;
+                font-weight: var(--font-weight-medium);
+                line-height: 1.4;
+            }
+
+            .container {
+                max-width: 72rem;
+                margin: 0 auto;
+                padding: 2rem 1rem;
+            }
+            @media (min-width: 640px) {
+                .container {
+                    padding: 3rem 1.5rem;
+                }
+            }
+            @media (min-width: 1024px) {
+                .container {
+                    padding: 4rem 2rem;
+                }
+            }
+
+            /* Dark mode toggle */
+            .theme-toggle {
+                position: fixed;
+                top: 1rem;
+                right: 1rem;
+                z-index: 100;
+                width: 44px;
+                height: 44px;
+                border-radius: 50%;
+                border: 1px solid var(--border);
+                background: var(--card);
+                color: var(--foreground);
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: var(--shadow-md);
+                transition:
+                    background 0.3s,
+                    transform 0.2s,
+                    box-shadow 0.3s;
+            }
+            .theme-toggle:hover {
+                transform: scale(1.1);
+            }
+            .theme-toggle:active {
+                transform: scale(0.95);
+            }
+            .theme-toggle svg {
+                width: 20px;
+                height: 20px;
+            }
+            .theme-toggle .icon-sun {
+                display: none;
+            }
+            html.dark .theme-toggle .icon-sun {
+                display: block;
+            }
+            html.dark .theme-toggle .icon-moon {
+                display: none;
+            }
+
+            .page-header {
+                text-align: center;
+                margin-bottom: 2rem;
+            }
+            @media (min-width: 640px) {
+                .page-header {
+                    margin-bottom: 3rem;
+                }
+            }
+            .page-header h1 {
+                margin-bottom: 0.5rem;
+            }
+            .page-header p {
+                color: var(--muted-foreground);
+                max-width: 42rem;
+                margin: 0 auto;
+                font-size: 0.9375rem;
+            }
+
+            .main-grid {
+                display: grid;
+                gap: 1.5rem;
+            }
+            @media (min-width: 1024px) {
+                .main-grid {
+                    grid-template-columns: 1fr 1fr;
+                    gap: 2.5rem;
+                }
+            }
+
+            .card {
+                background: var(--card);
+                border-radius: var(--radius);
+                border: 1px solid var(--border);
+                padding: 1.5rem;
+                box-shadow: var(--shadow-sm);
+                transition:
+                    background 0.3s,
+                    border-color 0.3s;
+            }
+            @media (min-width: 640px) {
+                .card {
+                    padding: 2rem;
+                }
+            }
+            .card h2,
+            .card h3 {
+                margin-bottom: 1.5rem;
+            }
+
+            .field {
+                margin-bottom: 1.5rem;
+            }
+            .field:last-child {
+                margin-bottom: 0;
+            }
+            .field label {
+                display: block;
+                margin-bottom: 0.5rem;
+                font-size: 0.9375rem;
+                font-weight: var(--font-weight-medium);
+            }
+            .input-wrap {
+                position: relative;
+            }
+
+            .field input[type="number"],
+            .field select {
+                width: 100%;
+                padding: 0.75rem 1rem;
+                border-radius: calc(var(--radius) - 2px);
+                border: 1px solid var(--border);
+                background: var(--input-background);
+                font-size: 1rem;
+                font-weight: var(--font-weight-normal);
+                line-height: 1.5;
+                color: var(--foreground);
+                transition:
+                    box-shadow 0.15s,
+                    background 0.3s,
+                    border-color 0.3s;
+                outline: none;
+            }
+            .field input[type="number"]:focus,
+            .field select:focus {
+                box-shadow: 0 0 0 2px var(--ring);
+            }
+
+            .field .prefix,
+            .field .suffix {
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--muted-foreground);
+                pointer-events: none;
+                white-space: nowrap;
+                font-size: 0.9375rem;
+            }
+            .field .prefix {
+                left: 1rem;
+            }
+            .field .suffix {
+                right: 1rem;
+            }
+            .field input.has-prefix {
+                padding-left: 3.5rem;
+            }
+            .field input.has-suffix {
+                padding-right: 7.5rem;
+            }
+            .field .description {
+                margin-top: 0.5rem;
+                font-size: 0.8125rem;
+                color: var(--muted-foreground);
+            }
+
+            .results-col {
+                display: flex;
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+
+            /* Cat area */
+            .cat-area {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 1rem;
+                padding: 1.5rem 1rem 1rem;
+                background: var(--card);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                box-shadow: var(--shadow-sm);
+                transition:
+                    background 0.3s,
+                    border-color 0.3s;
+            }
+
+            .cat-row {
+                display: flex;
+                align-items: flex-end;
+                gap: 1rem;
+                width: 100%;
+            }
+
+            /* Three.js canvas container */
+            .cat-canvas-wrap {
+                flex-shrink: 0;
+                width: 120px;
+                height: 120px;
+                border-radius: 50%;
+                background: var(--cat-glow);
+                overflow: hidden;
+                transition: background 0.3s;
+            }
+            @media (max-width: 480px) {
+                .cat-canvas-wrap {
+                    width: 90px;
+                    height: 90px;
+                }
+            }
+            .cat-canvas-wrap canvas {
+                display: block;
+                width: 100% !important;
+                height: 100% !important;
+            }
+
+            /* Speech bubble */
+            .cat-speech {
+                flex: 1;
+                position: relative;
+                background: var(--muted);
+                border-radius: 1rem;
+                padding: 0.75rem 1rem;
+                font-size: 0.875rem;
+                color: var(--muted-foreground);
+                min-height: 3rem;
+                display: flex;
+                align-items: center;
+                transition:
+                    background 0.3s,
+                    color 0.3s;
+            }
+            .cat-speech::before {
+                content: "";
+                position: absolute;
+                left: -10px;
+                top: 50%;
+                transform: translateY(-50%);
+                border: 6px solid transparent;
+                border-right-color: var(--muted);
+                transition: border-color 0.3s;
+            }
+            .cat-speech.verdict {
+                background: var(--verdict-sub-bg);
+                color: var(--verdict-sub-color);
+                font-weight: var(--font-weight-medium);
+            }
+            .cat-speech.verdict::before {
+                border-right-color: var(--verdict-sub-bg);
+            }
+            .cat-speech.verdict.build-verdict {
+                background: var(--verdict-build-bg);
+                color: var(--verdict-build-color);
+            }
+            .cat-speech.verdict.build-verdict::before {
+                border-right-color: var(--verdict-build-bg);
+            }
+
+            .thinking-dots {
+                display: none;
+                gap: 4px;
+                align-items: center;
+            }
+            .thinking-dots span {
+                display: inline-block;
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background: var(--muted-foreground);
+                animation: dotBounce 1.2s infinite ease-in-out;
+            }
+            .thinking-dots span:nth-child(2) {
+                animation-delay: 0.2s;
+            }
+            .thinking-dots span:nth-child(3) {
+                animation-delay: 0.4s;
+            }
+            @keyframes dotBounce {
+                0%,
+                80%,
+                100% {
+                    transform: scale(0.6);
+                    opacity: 0.4;
+                }
+                40% {
+                    transform: scale(1);
+                    opacity: 1;
+                }
+            }
+            .cat-speech.thinking .speech-text {
+                display: none;
+            }
+            .cat-speech.thinking .thinking-dots {
+                display: flex;
+            }
+
+            /* Calculate button */
+            .calc-btn-wrap {
+                display: flex;
+                justify-content: center;
+            }
+            .calc-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.75rem 2rem;
+                background: var(--foreground);
+                color: var(--background);
+                border: none;
+                border-radius: var(--radius);
+                font-size: 1rem;
+                font-weight: var(--font-weight-medium);
+                cursor: pointer;
+                transition:
+                    opacity 0.15s,
+                    transform 0.15s,
+                    background 0.3s,
+                    color 0.3s;
+            }
+            .calc-btn:hover {
+                opacity: 0.85;
+                transform: translateY(-1px);
+            }
+            .calc-btn:active {
+                transform: scale(0.97);
+            }
+            .calc-btn:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                transform: none;
+            }
+
+            /* Results area */
+            #resultArea {
+                display: flex;
+                flex-direction: column;
+                gap: 1.5rem;
+                opacity: 0;
+                transform: translateY(8px);
+                pointer-events: none;
+                transition:
+                    opacity 0.4s ease,
+                    transform 0.4s ease;
+            }
+            #resultArea.visible {
+                opacity: 1;
+                transform: translateY(0);
+                pointer-events: auto;
+            }
+
+            /* Recommendation */
+            .recommendation {
+                border-radius: var(--radius);
+                padding: 1.5rem;
+                border: 2px solid;
+                display: flex;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+            @media (min-width: 640px) {
+                .recommendation {
+                    padding: 2rem;
+                }
+            }
+            .recommendation.subscribe {
+                background: var(--subscribe-bg);
+                border-color: var(--subscribe-border);
+            }
+            .recommendation.build {
+                background: var(--build-bg);
+                border-color: var(--build-border);
+            }
+
+            .rec-icon {
+                flex-shrink: 0;
+                width: 2.5rem;
+                height: 2.5rem;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .rec-icon.subscribe {
+                background: #2563eb;
+            }
+            .rec-icon.build {
+                background: #16a34a;
+            }
+            .rec-icon svg {
+                width: 1.25rem;
+                height: 1.25rem;
+            }
+
+            .rec-body {
+                flex: 1;
+            }
+            .rec-body h3 {
+                margin-bottom: 0.375rem;
+            }
+            .rec-body > p {
+                margin-bottom: 0.75rem;
+                font-size: 0.875rem;
+            }
+
+            .rec-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.375rem;
+                padding: 0.375rem 0.75rem;
+                border-radius: 9999px;
+                font-size: 0.8125rem;
+            }
+            .rec-badge.subscribe {
+                background: var(--subscribe-badge-bg);
+                color: var(--subscribe-color);
+            }
+            .rec-badge.build {
+                background: var(--build-badge-bg);
+                color: var(--build-color);
+            }
+            .rec-badge svg {
+                width: 0.875rem;
+                height: 0.875rem;
+                flex-shrink: 0;
+            }
+
+            /* Cost breakdown */
+            .cost-section {
+                margin-bottom: 1.25rem;
+            }
+            .cost-section:last-child {
+                margin-bottom: 0;
+            }
+            .cost-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: baseline;
+                margin-bottom: 0.5rem;
+            }
+            .cost-total {
+                text-align: right;
+            }
+            .cost-total .amount {
+                font-size: 1.375rem;
+                font-weight: var(--font-weight-medium);
+            }
+            .cost-total .period {
+                font-size: 0.8125rem;
+                color: var(--muted-foreground);
+            }
+            .cost-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.5rem 0;
+                border-top: 1px solid var(--border);
+                font-size: 0.9375rem;
+            }
+            .cost-row .label {
+                color: var(--muted-foreground);
+            }
+            .cost-divider {
+                padding-top: 1.25rem;
+                border-top: 2px solid var(--border);
+            }
+
+            /* Algorithm */
+            .algo-section {
+                margin-top: 3rem;
+                max-width: 56rem;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .algo-toggle {
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 1.25rem;
+                background: var(--card);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                cursor: pointer;
+                transition: background 0.15s;
+                font-size: 0.9375rem;
+                font-weight: var(--font-weight-medium);
+                color: var(--foreground);
+            }
+            .algo-toggle:hover {
+                background: var(--muted);
+            }
+            .algo-toggle .left {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+            }
+            .algo-toggle .left svg {
+                width: 1.25rem;
+                height: 1.25rem;
+                color: var(--muted-foreground);
+            }
+            .algo-chevron {
+                width: 1.25rem;
+                height: 1.25rem;
+                color: var(--muted-foreground);
+                transition: transform 0.2s;
+                flex-shrink: 0;
+            }
+            .algo-chevron.open {
+                transform: rotate(180deg);
+            }
+            .algo-content {
+                display: none;
+                margin-top: 0.75rem;
+                padding: 1.25rem;
+                background: var(--card);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                color: var(--muted-foreground);
+                font-size: 0.9375rem;
+            }
+            @media (min-width: 640px) {
+                .algo-content {
+                    padding: 1.5rem;
+                }
+            }
+            .algo-content.open {
+                display: block;
+            }
+            .algo-content h3 {
+                margin-bottom: 1.25rem;
+                color: var(--foreground);
+            }
+            .algo-block {
+                margin-bottom: 1.25rem;
+            }
+            .algo-block h4 {
+                margin-bottom: 0.5rem;
+                color: var(--foreground);
+            }
+            .algo-formulas {
+                padding-left: 1rem;
+                border-left: 2px solid var(--border);
+            }
+            .algo-formulas p {
+                margin-bottom: 0.375rem;
+            }
+            .algo-formulas strong {
+                color: var(--foreground);
+            }
+            .algo-assumptions {
+                padding-top: 0.75rem;
+                margin-top: 1.25rem;
+                border-top: 1px solid var(--border);
+            }
+            .algo-assumptions h4 {
+                margin-bottom: 0.5rem;
+                color: var(--foreground);
+            }
+            .algo-assumptions ul {
+                padding-left: 1.5rem;
+                list-style: disc;
+            }
+            .algo-assumptions li {
+                margin-bottom: 0.375rem;
+            }
+
+            footer {
+                margin-top: 3rem;
+                text-align: center;
+                color: var(--muted-foreground);
+                font-size: 0.875rem;
+            }
+
+            input[type="number"]::-webkit-inner-spin-button,
+            input[type="number"]::-webkit-outer-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
+            input[type="number"] {
+                -moz-appearance: textfield;
+            }
+
+            /* Mobile stacking */
+            @media (max-width: 480px) {
+                .container {
+                    padding: 1.25rem 0.75rem;
+                }
+                .card {
+                    padding: 1.25rem;
+                }
+                .cat-area {
+                    padding: 1rem 0.75rem 0.75rem;
+                }
+                .cat-row {
+                    gap: 0.75rem;
+                }
+                .cat-speech {
+                    font-size: 0.8125rem;
+                    padding: 0.625rem 0.75rem;
+                }
+                .recommendation {
+                    padding: 1.25rem;
+                    flex-direction: column;
+                    align-items: center;
+                    text-align: center;
+                }
+                .cost-total .amount {
+                    font-size: 1.25rem;
+                }
+                h1 {
+                    font-size: 1.25rem;
+                }
+                h2 {
+                    font-size: 1.125rem;
+                }
+                .page-header p {
+                    font-size: 0.8125rem;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <!-- Dark mode toggle -->
+        <button
+            class="theme-toggle"
+            id="themeToggle"
+            type="button"
+            aria-label="Toggle dark mode"
+        >
+            <svg
+                class="icon-moon"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                />
+            </svg>
+            <svg
+                class="icon-sun"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                />
+            </svg>
+        </button>
+
+        <div class="container">
+            <div class="page-header">
+                <h1>Subscribe or Build?</h1>
+                <p>
+                    Calculate whether it makes financial sense to subscribe to a
+                    service or vibe code it yourself.
+                </p>
+            </div>
+
+            <div class="main-grid">
+                <div class="card">
+                    <h2>Input Your Numbers</h2>
+
+                    <div class="field">
+                        <label for="currency">Currency</label>
+                        <select id="currency"></select>
+                    </div>
+
+                    <div class="field">
+                        <label for="hourlyRate">Your Hourly Rate</label>
+                        <div class="input-wrap">
+                            <span class="prefix" id="hourlyRatePrefix">$</span>
+                            <input
+                                type="number"
+                                id="hourlyRate"
+                                class="has-prefix has-suffix"
+                                value="50"
+                                min="0"
+                                step="5"
+                            />
+                            <span class="suffix">/ hour</span>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="buildTime">Build Time</label>
+                        <div class="input-wrap">
+                            <input
+                                type="number"
+                                id="buildTime"
+                                class="has-suffix"
+                                value="40"
+                                min="0"
+                                step="5"
+                            />
+                            <span class="suffix">hours</span>
+                        </div>
+                        <p class="description">
+                            Estimated time to build the initial version
+                        </p>
+                    </div>
+
+                    <div class="field">
+                        <label for="maintenanceHours"
+                            >Monthly Maintenance</label
+                        >
+                        <div class="input-wrap">
+                            <input
+                                type="number"
+                                id="maintenanceHours"
+                                class="has-suffix"
+                                value="4"
+                                min="0"
+                                step="1"
+                            />
+                            <span class="suffix">hours/month</span>
+                        </div>
+                        <p class="description">
+                            Time spent on updates, fixes, and improvements
+                        </p>
+                    </div>
+
+                    <div class="field">
+                        <label for="subscriptionCost">Subscription Cost</label>
+                        <div class="input-wrap">
+                            <span class="prefix" id="subscriptionPrefix"
+                                >$</span
+                            >
+                            <input
+                                type="number"
+                                id="subscriptionCost"
+                                class="has-prefix has-suffix"
+                                value="29"
+                                min="0"
+                                step="5"
+                            />
+                            <span class="suffix">/ month</span>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="timeframe">Time Horizon</label>
+                        <div class="input-wrap">
+                            <input
+                                type="number"
+                                id="timeframe"
+                                class="has-suffix"
+                                value="12"
+                                min="1"
+                                max="60"
+                                step="1"
+                            />
+                            <span class="suffix">months</span>
+                        </div>
+                        <p class="description">
+                            How long do you plan to use this?
+                        </p>
+                    </div>
+                </div>
+
+                <div class="results-col">
+                    <div class="cat-area">
+                        <div class="cat-row">
+                            <div
+                                class="cat-canvas-wrap"
+                                id="catCanvasWrap"
+                            ></div>
+                            <div class="cat-speech" id="catSpeech">
+                                <span class="speech-text" id="speechText"
+                                    >Hi! I'm your decision buddy! Fill in your
+                                    numbers and hit Calculate!</span
+                                >
+                                <span class="thinking-dots" id="thinkingDots">
+                                    <span></span><span></span><span></span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="calc-btn-wrap">
+                            <button class="calc-btn" id="calcBtn" type="button">
+                                <svg
+                                    width="16"
+                                    height="16"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                                    />
+                                </svg>
+                                <span id="calcBtnLabel">Calculate</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="resultArea">
+                        <div
+                            class="recommendation subscribe"
+                            id="recommendation"
+                        >
+                            <div class="rec-icon subscribe" id="recIcon">
+                                <svg
+                                    id="recSvg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="white"
+                                    stroke-width="2"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        d="M5 13l4 4L19 7"
+                                    />
+                                </svg>
+                            </div>
+                            <div class="rec-body">
+                                <h3
+                                    id="recTitle"
+                                    style="color: var(--subscribe-color)"
+                                >
+                                    Subscribe
+                                </h3>
+                                <p
+                                    id="recText"
+                                    style="color: var(--subscribe-color)"
+                                ></p>
+                                <div class="rec-badge subscribe" id="recBadge">
+                                    <svg
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        />
+                                    </svg>
+                                    <span id="recBadgeText"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3>Cost Breakdown</h3>
+                            <div class="cost-section">
+                                <div class="cost-header">
+                                    <h4>Building</h4>
+                                    <div class="cost-total">
+                                        <div
+                                            class="amount"
+                                            id="totalBuildDisplay"
+                                        ></div>
+                                        <div
+                                            class="period"
+                                            id="buildPeriod"
+                                        ></div>
+                                    </div>
+                                </div>
+                                <div class="cost-row">
+                                    <span class="label">Initial build</span
+                                    ><span id="buildCostDisplay"></span>
+                                </div>
+                                <div class="cost-row">
+                                    <span class="label"
+                                        >Monthly maintenance</span
+                                    ><span
+                                        id="maintenanceMonthlyDisplay"
+                                    ></span>
+                                </div>
+                                <div class="cost-row">
+                                    <span class="label">Total maintenance</span
+                                    ><span id="maintenanceTotalDisplay"></span>
+                                </div>
+                            </div>
+                            <div class="cost-section cost-divider">
+                                <div class="cost-header">
+                                    <h4>Subscribing</h4>
+                                    <div class="cost-total">
+                                        <div
+                                            class="amount"
+                                            id="totalSubDisplay"
+                                        ></div>
+                                        <div
+                                            class="period"
+                                            id="subPeriod"
+                                        ></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="algo-section">
+                <button class="algo-toggle" id="algoToggle" type="button">
+                    <div class="left">
+                        <svg
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                            />
+                        </svg>
+                        <span>How does the calculator work?</span>
+                    </div>
+                    <svg
+                        class="algo-chevron"
+                        id="algoChevron"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M19 9l-7 7-7-7"
+                        />
+                    </svg>
+                </button>
+                <div class="algo-content" id="algoContent">
+                    <h3>The Algorithm</h3>
+                    <div class="algo-block">
+                        <h4>Build Cost Calculation</h4>
+                        <div class="algo-formulas">
+                            <p>
+                                <strong>Initial Build Cost</strong> = Hourly
+                                Rate &times; Build Time
+                            </p>
+                            <p>
+                                <strong>Monthly Maintenance Cost</strong> =
+                                Hourly Rate &times; Maintenance Hours per Month
+                            </p>
+                            <p>
+                                <strong>Total Build Cost</strong> = Initial
+                                Build Cost + (Monthly Maintenance Cost &times;
+                                Time Horizon)
+                            </p>
+                        </div>
+                    </div>
+                    <div class="algo-block">
+                        <h4>Subscription Cost Calculation</h4>
+                        <div class="algo-formulas">
+                            <p>
+                                <strong>Total Subscription Cost</strong> =
+                                Monthly Subscription Cost &times; Time Horizon
+                            </p>
+                        </div>
+                    </div>
+                    <div class="algo-block">
+                        <h4>Comparison &amp; Recommendation</h4>
+                        <div class="algo-formulas">
+                            <p>
+                                <strong>Savings</strong> = Total Build Cost
+                                &minus; Total Subscription Cost
+                            </p>
+                            <p>
+                                If <strong>Savings &gt; 0</strong>: Recommend
+                                <strong>Subscribe</strong>
+                            </p>
+                            <p>
+                                If <strong>Savings &lt; 0</strong>: Recommend
+                                <strong>Build</strong>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="algo-block">
+                        <h4>Break-Even Analysis</h4>
+                        <div class="algo-formulas">
+                            <p>
+                                <strong>Break-Even Point</strong> = Initial
+                                Build Cost &divide; (Monthly Subscription Cost
+                                &minus; Monthly Maintenance Cost)
+                            </p>
+                            <p>
+                                This tells you at what month subscribing becomes
+                                cheaper than building.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="algo-assumptions">
+                        <h4>Key Assumptions</h4>
+                        <ul>
+                            <li>Your time has real monetary value</li>
+                            <li>
+                                Maintenance includes bug fixes, security
+                                updates, feature improvements, and
+                                infrastructure management
+                            </li>
+                            <li>
+                                Subscription costs and maintenance hours remain
+                                constant over the time horizon
+                            </li>
+                            <li>
+                                The comparison doesn't factor in opportunity
+                                cost, learning curve, or reliability differences
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <footer>
+                <p>Made with <span style="color:#e25555;">&hearts;</span> by <a href="https://x.com/mohantyabhijit" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:2px;">Abhijit Mohanty</a></p>
+            </footer>
+        </div>
+
+        <script>
+            (function () {
+                "use strict";
+
+                // ── Three.js Cat ─────────────────────────────────────────
+                var catContainer = document.getElementById("catCanvasWrap");
+                var scene = new THREE.Scene();
+                var camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
+                camera.position.set(0, 1.2, 6);
+                camera.lookAt(0, 0.5, 0);
+
+                var renderer = new THREE.WebGLRenderer({
+                    antialias: true,
+                    alpha: true,
+                });
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                renderer.setClearColor(0x000000, 0);
+                catContainer.appendChild(renderer.domElement);
+
+                function resizeCat() {
+                    var w = catContainer.clientWidth;
+                    var h = catContainer.clientHeight;
+                    renderer.setSize(w, h);
+                    camera.aspect = w / h;
+                    camera.updateProjectionMatrix();
+                }
+                resizeCat();
+                window.addEventListener("resize", resizeCat);
+
+                // Lighting
+                var ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                scene.add(ambientLight);
+                var dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                dirLight.position.set(3, 5, 4);
+                scene.add(dirLight);
+                var rimLight = new THREE.DirectionalLight(0xffd4a0, 0.3);
+                rimLight.position.set(-3, 2, -2);
+                scene.add(rimLight);
+
+                // Materials
+                var orangeFur = new THREE.MeshStandardMaterial({
+                    color: 0xf4943e,
+                    roughness: 0.8,
+                    metalness: 0.0,
+                });
+                var lightOrange = new THREE.MeshStandardMaterial({
+                    color: 0xfbbf6a,
+                    roughness: 0.8,
+                    metalness: 0.0,
+                });
+                var pinkMat = new THREE.MeshStandardMaterial({
+                    color: 0xf9bebe,
+                    roughness: 0.7,
+                });
+                var noseMat = new THREE.MeshStandardMaterial({
+                    color: 0xe8738a,
+                    roughness: 0.5,
+                });
+                var darkMat = new THREE.MeshStandardMaterial({
+                    color: 0x3a2a1a,
+                    roughness: 0.6,
+                });
+                var whiteMat = new THREE.MeshStandardMaterial({
+                    color: 0xffffff,
+                    roughness: 0.5,
+                });
+                var stripeMat = new THREE.MeshStandardMaterial({
+                    color: 0xd97b2a,
+                    roughness: 0.8,
+                    metalness: 0.0,
+                });
+
+                var catGroup = new THREE.Group();
+                scene.add(catGroup);
+
+                // Body
+                var bodyGeo = new THREE.SphereGeometry(1, 24, 18);
+                bodyGeo.scale(0.85, 0.9, 0.7);
+                var body = new THREE.Mesh(bodyGeo, orangeFur);
+                body.position.set(0, 0, 0);
+                catGroup.add(body);
+
+                // Belly
+                var bellyGeo = new THREE.SphereGeometry(0.65, 20, 16);
+                bellyGeo.scale(0.7, 0.85, 0.6);
+                var belly = new THREE.Mesh(bellyGeo, lightOrange);
+                belly.position.set(0, -0.05, 0.25);
+                catGroup.add(belly);
+
+                // Head
+                var headGeo = new THREE.SphereGeometry(0.7, 24, 20);
+                headGeo.scale(1, 0.92, 0.88);
+                var head = new THREE.Mesh(headGeo, orangeFur);
+                head.position.set(0, 1.15, 0.1);
+                catGroup.add(head);
+
+                // Cheeks
+                var cheekGeo = new THREE.SphereGeometry(0.25, 16, 12);
+                var cheekL = new THREE.Mesh(cheekGeo, lightOrange);
+                cheekL.position.set(-0.4, 1.0, 0.35);
+                catGroup.add(cheekL);
+                var cheekR = new THREE.Mesh(cheekGeo, lightOrange);
+                cheekR.position.set(0.4, 1.0, 0.35);
+                catGroup.add(cheekR);
+
+                // Ears
+                var earGeo = new THREE.ConeGeometry(0.28, 0.5, 4);
+                var earL = new THREE.Mesh(earGeo, orangeFur);
+                earL.position.set(-0.42, 1.75, 0.05);
+                earL.rotation.z = 0.3;
+                earL.rotation.x = -0.1;
+                catGroup.add(earL);
+
+                var earR = new THREE.Mesh(earGeo, orangeFur);
+                earR.position.set(0.42, 1.75, 0.05);
+                earR.rotation.z = -0.3;
+                earR.rotation.x = -0.1;
+                catGroup.add(earR);
+
+                // Inner ears
+                var innerEarGeo = new THREE.ConeGeometry(0.16, 0.3, 4);
+                var innerEarL = new THREE.Mesh(innerEarGeo, pinkMat);
+                innerEarL.position.set(-0.4, 1.73, 0.12);
+                innerEarL.rotation.z = 0.3;
+                innerEarL.rotation.x = -0.1;
+                catGroup.add(innerEarL);
+
+                var innerEarR = new THREE.Mesh(innerEarGeo, pinkMat);
+                innerEarR.position.set(0.4, 1.73, 0.12);
+                innerEarR.rotation.z = -0.3;
+                innerEarR.rotation.x = -0.1;
+                catGroup.add(innerEarR);
+
+                // Muzzle
+                var muzzleGeo = new THREE.SphereGeometry(0.22, 16, 12);
+                muzzleGeo.scale(1.3, 0.8, 1);
+                var muzzle = new THREE.Mesh(muzzleGeo, lightOrange);
+                muzzle.position.set(0, 0.98, 0.52);
+                catGroup.add(muzzle);
+
+                // Nose
+                var noseGeo = new THREE.SphereGeometry(0.07, 12, 8);
+                noseGeo.scale(1.3, 1, 1.2);
+                var nose = new THREE.Mesh(noseGeo, noseMat);
+                nose.position.set(0, 1.05, 0.63);
+                catGroup.add(nose);
+
+                // Eyes
+                var eyeGeo = new THREE.SphereGeometry(0.12, 16, 12);
+                var eyeWhiteGeo = new THREE.SphereGeometry(0.14, 16, 12);
+
+                var eyeWhiteL = new THREE.Mesh(eyeWhiteGeo, whiteMat);
+                eyeWhiteL.position.set(-0.24, 1.2, 0.48);
+                catGroup.add(eyeWhiteL);
+                var eyeWhiteR = new THREE.Mesh(eyeWhiteGeo, whiteMat);
+                eyeWhiteR.position.set(0.24, 1.2, 0.48);
+                catGroup.add(eyeWhiteR);
+
+                var eyeL = new THREE.Mesh(eyeGeo, darkMat);
+                eyeL.position.set(-0.24, 1.2, 0.54);
+                catGroup.add(eyeL);
+                var eyeR = new THREE.Mesh(eyeGeo, darkMat);
+                eyeR.position.set(0.24, 1.2, 0.54);
+                catGroup.add(eyeR);
+
+                // Eye highlights
+                var highlightGeo = new THREE.SphereGeometry(0.04, 8, 6);
+                var highlightL = new THREE.Mesh(highlightGeo, whiteMat);
+                highlightL.position.set(-0.21, 1.24, 0.62);
+                catGroup.add(highlightL);
+                var highlightR = new THREE.Mesh(highlightGeo, whiteMat);
+                highlightR.position.set(0.27, 1.24, 0.62);
+                catGroup.add(highlightR);
+
+                // Eyelids for blinking (scaled flat initially)
+                var lidGeo = new THREE.SphereGeometry(
+                    0.15,
+                    16,
+                    8,
+                    0,
+                    Math.PI * 2,
+                    0,
+                    Math.PI / 2,
+                );
+                var lidMat = new THREE.MeshStandardMaterial({
+                    color: 0xf4943e,
+                    roughness: 0.8,
+                });
+                var lidL = new THREE.Mesh(lidGeo, lidMat);
+                lidL.position.set(-0.24, 1.2, 0.5);
+                lidL.scale.y = 0;
+                catGroup.add(lidL);
+                var lidR = new THREE.Mesh(lidGeo, lidMat);
+                lidR.position.set(0.24, 1.2, 0.5);
+                lidR.scale.y = 0;
+                catGroup.add(lidR);
+
+                // Whiskers (thin lines)
+                var whiskerMat = new THREE.LineBasicMaterial({
+                    color: 0xccaa88,
+                    linewidth: 1,
+                });
+                function makeWhisker(x1, y1, z1, x2, y2, z2) {
+                    var geo = new THREE.BufferGeometry().setFromPoints([
+                        new THREE.Vector3(x1, y1, z1),
+                        new THREE.Vector3(x2, y2, z2),
+                    ]);
+                    var line = new THREE.Line(geo, whiskerMat);
+                    catGroup.add(line);
+                    return line;
+                }
+                makeWhisker(-0.35, 1.02, 0.5, -0.9, 1.1, 0.6);
+                makeWhisker(-0.35, 0.98, 0.5, -0.9, 0.95, 0.6);
+                makeWhisker(0.35, 1.02, 0.5, 0.9, 1.1, 0.6);
+                makeWhisker(0.35, 0.98, 0.5, 0.9, 0.95, 0.6);
+
+                // Stripes on forehead
+                var stripe1Geo = new THREE.BoxGeometry(0.06, 0.2, 0.01);
+                var s1 = new THREE.Mesh(stripe1Geo, stripeMat);
+                s1.position.set(0, 1.55, 0.58);
+                s1.rotation.x = -0.3;
+                catGroup.add(s1);
+                var s2 = new THREE.Mesh(stripe1Geo, stripeMat);
+                s2.position.set(-0.15, 1.52, 0.57);
+                s2.rotation.z = 0.3;
+                s2.rotation.x = -0.3;
+                catGroup.add(s2);
+                var s3 = new THREE.Mesh(stripe1Geo, stripeMat);
+                s3.position.set(0.15, 1.52, 0.57);
+                s3.rotation.z = -0.3;
+                s3.rotation.x = -0.3;
+                catGroup.add(s3);
+
+                // Tail
+                var tailCurve = new THREE.CatmullRomCurve3([
+                    new THREE.Vector3(-0.2, 0, -0.5),
+                    new THREE.Vector3(-0.7, 0.3, -0.8),
+                    new THREE.Vector3(-0.9, 0.9, -0.7),
+                    new THREE.Vector3(-0.6, 1.3, -0.4),
+                ]);
+                var tailGeo = new THREE.TubeGeometry(
+                    tailCurve,
+                    20,
+                    0.1,
+                    8,
+                    false,
+                );
+                var tail = new THREE.Mesh(tailGeo, orangeFur);
+                catGroup.add(tail);
+
+                // Tail tip (darker)
+                var tipGeo = new THREE.SphereGeometry(0.13, 12, 8);
+                var tailTip = new THREE.Mesh(tipGeo, stripeMat);
+                tailTip.position.set(-0.6, 1.3, -0.4);
+                catGroup.add(tailTip);
+
+                // Paws
+                var pawGeo = new THREE.SphereGeometry(0.2, 12, 8);
+                pawGeo.scale(1.1, 0.6, 1);
+                var pawFL = new THREE.Mesh(pawGeo, orangeFur);
+                pawFL.position.set(-0.35, -0.7, 0.35);
+                catGroup.add(pawFL);
+                var pawFR = new THREE.Mesh(pawGeo, orangeFur);
+                pawFR.position.set(0.35, -0.7, 0.35);
+                catGroup.add(pawFR);
+                var pawBL = new THREE.Mesh(pawGeo, orangeFur);
+                pawBL.position.set(-0.45, -0.7, -0.2);
+                catGroup.add(pawBL);
+                var pawBR = new THREE.Mesh(pawGeo, orangeFur);
+                pawBR.position.set(0.45, -0.7, -0.2);
+                catGroup.add(pawBR);
+
+                // Position cat down a bit
+                catGroup.position.y = -0.4;
+
+                // ── Cat animation state ──────────────────────────────────
+                var catState = "idle"; // idle, thinking, happy
+                var clock = new THREE.Clock();
+                var blinkTimer = 0;
+                var nextBlink = 2 + Math.random() * 3;
+                var blinkPhase = 0; // 0 = open, >0 = blinking
+                var headBobPhase = 0;
+                var tailBaseAngle = 0;
+                var happyBouncePhase = 0;
+                var happyStartTime = 0;
+
+                function setCatState3D(s) {
+                    catState = s;
+                    if (s === "happy") {
+                        happyStartTime = clock.getElapsedTime();
+                        happyBouncePhase = 0;
+                    }
+                }
+
+                function animate() {
+                    requestAnimationFrame(animate);
+                    var dt = clock.getDelta();
+                    var t = clock.getElapsedTime();
+
+                    // Breathing (body scale oscillation)
+                    var breathe = 1 + Math.sin(t * 1.5) * 0.02;
+                    body.scale.set(breathe, breathe, breathe);
+                    belly.scale.set(
+                        breathe * 0.7,
+                        breathe * 0.85,
+                        breathe * 0.6,
+                    );
+
+                    // Blinking
+                    blinkTimer += dt;
+                    if (blinkPhase <= 0 && blinkTimer > nextBlink) {
+                        blinkPhase = 0.3;
+                        blinkTimer = 0;
+                        nextBlink = 2 + Math.random() * 4;
+                    }
+                    if (blinkPhase > 0) {
+                        blinkPhase -= dt;
+                        var blinkAmount =
+                            blinkPhase > 0.15
+                                ? (0.3 - blinkPhase) / 0.15
+                                : blinkPhase / 0.15;
+                        blinkAmount = Math.max(0, Math.min(1, blinkAmount));
+                        lidL.scale.y = blinkAmount;
+                        lidR.scale.y = blinkAmount;
+                    } else {
+                        lidL.scale.y = 0;
+                        lidR.scale.y = 0;
+                    }
+
+                    // Idle: gentle head sway & tail
+                    if (catState === "idle") {
+                        head.rotation.z = Math.sin(t * 0.8) * 0.03;
+                        head.rotation.x = Math.sin(t * 0.6) * 0.02;
+                        earL.rotation.z = 0.3 + Math.sin(t * 1.2) * 0.05;
+                        earR.rotation.z = -0.3 - Math.sin(t * 1.2) * 0.05;
+                        tail.rotation.z = Math.sin(t * 0.5) * 0.15;
+                        tailTip.position.x = -0.6 + Math.sin(t * 0.5) * 0.15;
+                        catGroup.position.y = -0.4 + Math.sin(t * 1.5) * 0.01;
+                        catGroup.rotation.y = Math.sin(t * 0.3) * 0.05;
+                    }
+
+                    // Thinking: head tilt, faster ear movement, squinty eyes
+                    if (catState === "thinking") {
+                        head.rotation.z = Math.sin(t * 2) * 0.08;
+                        head.rotation.x = -0.1 + Math.sin(t * 1.5) * 0.03;
+                        earL.rotation.z = 0.3 + Math.sin(t * 3) * 0.1;
+                        earR.rotation.z = -0.3 - Math.sin(t * 3.2) * 0.1;
+                        tail.rotation.z = Math.sin(t * 2) * 0.2;
+                        tailTip.position.x = -0.6 + Math.sin(t * 2) * 0.2;
+                        // Squint eyes
+                        lidL.scale.y = 0.6 + Math.sin(t * 4) * 0.15;
+                        lidR.scale.y = 0.6 + Math.sin(t * 4) * 0.15;
+                        catGroup.position.y = -0.4;
+                        catGroup.rotation.y = Math.sin(t * 1.5) * 0.08;
+                    }
+
+                    // Happy: bouncing, wide eyes, fast tail
+                    if (catState === "happy") {
+                        var ht = t - happyStartTime;
+                        var bounce =
+                            Math.abs(Math.sin(ht * 6)) *
+                            0.15 *
+                            Math.max(0, 1 - ht * 0.3);
+                        catGroup.position.y = -0.4 + bounce;
+                        head.rotation.z =
+                            Math.sin(ht * 8) * 0.1 * Math.max(0, 1 - ht * 0.3);
+                        head.rotation.x = 0.05;
+                        tail.rotation.z = Math.sin(ht * 10) * 0.3;
+                        tailTip.position.x = -0.6 + Math.sin(ht * 10) * 0.3;
+                        earL.rotation.z = 0.15;
+                        earR.rotation.z = -0.15;
+                        // Bright eyes
+                        lidL.scale.y = 0;
+                        lidR.scale.y = 0;
+                        catGroup.rotation.y = Math.sin(ht * 2) * 0.1;
+                        // After 3 seconds, transition to idle
+                        if (ht > 3.5) {
+                            catState = "idle";
+                        }
+                    }
+
+                    renderer.render(scene, camera);
+                }
+                animate();
+
+                // ── Currency data ────────────────────────────────────────
+                var currencies = [
+                    { code: "USD", symbol: "$", name: "US Dollar" },
+                    { code: "EUR", symbol: "\u20AC", name: "Euro" },
+                    { code: "GBP", symbol: "\u00A3", name: "British Pound" },
+                    { code: "INR", symbol: "\u20B9", name: "Indian Rupee" },
+                    { code: "SGD", symbol: "S$", name: "Singapore Dollar" },
+                    { code: "IDR", symbol: "Rp", name: "Indonesian Rupiah" },
+                    { code: "AUD", symbol: "A$", name: "Australian Dollar" },
+                    { code: "CAD", symbol: "C$", name: "Canadian Dollar" },
+                    { code: "JPY", symbol: "\u00A5", name: "Japanese Yen" },
+                    { code: "CNY", symbol: "\u00A5", name: "Chinese Yuan" },
+                    { code: "CHF", symbol: "Fr", name: "Swiss Franc" },
+                    { code: "MXN", symbol: "Mex$", name: "Mexican Peso" },
+                    { code: "BRL", symbol: "R$", name: "Brazilian Real" },
+                    { code: "VND", symbol: "\u20AB", name: "Vietnamese Dong" },
+                ];
+
+                var currencyDefaults = {
+                    USD: {
+                        hourlyRate: 50,
+                        subscription: 29,
+                        buildTime: 40,
+                        maintenance: 4,
+                    },
+                    EUR: {
+                        hourlyRate: 45,
+                        subscription: 25,
+                        buildTime: 40,
+                        maintenance: 4,
+                    },
+                    GBP: {
+                        hourlyRate: 40,
+                        subscription: 22,
+                        buildTime: 40,
+                        maintenance: 4,
+                    },
+                    INR: {
+                        hourlyRate: 4000,
+                        subscription: 2400,
+                        buildTime: 40,
+                        maintenance: 4,
+                    },
+                    SGD: {
+                        hourlyRate: 65,
+                        subscription: 38,
+                        buildTime: 40,
+                        maintenance: 4,
+                    },
+                    IDR: {
+                        hourlyRate: 750000,
+                        subscription: 450000,
+                        buildTime: 40,
+                        maintenance: 4,
+                    },
+                    AUD: {
+                        hourlyRate: 70,
+                        subscription: 40,
+                        buildTime: 40,
+                        maintenance: 4,
+                    },
+                    CAD: {
+                        hourlyRate: 65,
+                        subscription: 38,
+                        buildTime: 40,
+                        maintenance: 4,
+                    },
+                    JPY: {
+                        hourlyRate: 7000,
+                        subscription: 4000,
+                        buildTime: 40,
+                        maintenance: 4,
+                    },
+                    CNY: {
+                        hourlyRate: 350,
+                        subscription: 200,
+                        buildTime: 40,
+                        maintenance: 4,
+                    },
+                    CHF: {
+                        hourlyRate: 45,
+                        subscription: 27,
+                        buildTime: 40,
+                        maintenance: 4,
+                    },
+                    MXN: {
+                        hourlyRate: 900,
+                        subscription: 520,
+                        buildTime: 40,
+                        maintenance: 4,
+                    },
+                    BRL: {
+                        hourlyRate: 250,
+                        subscription: 145,
+                        buildTime: 40,
+                        maintenance: 4,
+                    },
+                    VND: {
+                        hourlyRate: 500000,
+                        subscription: 300000,
+                        buildTime: 40,
+                        maintenance: 4,
+                    },
+                };
+
+                // ── State ────────────────────────────────────────────────
+                var state = {
+                    currency: "USD",
+                    hourlyRate: 50,
+                    buildTime: 40,
+                    maintenanceHours: 4,
+                    subscriptionCost: 29,
+                    timeframe: 12,
+                };
+
+                var hasCalculated = false;
+                var typingTimeout = null;
+
+                // ── DOM refs ─────────────────────────────────────────────
+                var el = {
+                    currency: document.getElementById("currency"),
+                    hourlyRate: document.getElementById("hourlyRate"),
+                    buildTime: document.getElementById("buildTime"),
+                    maintenanceHours:
+                        document.getElementById("maintenanceHours"),
+                    subscriptionCost:
+                        document.getElementById("subscriptionCost"),
+                    timeframe: document.getElementById("timeframe"),
+                    hourlyRatePrefix:
+                        document.getElementById("hourlyRatePrefix"),
+                    subscriptionPrefix:
+                        document.getElementById("subscriptionPrefix"),
+                    catSpeech: document.getElementById("catSpeech"),
+                    speechText: document.getElementById("speechText"),
+                    calcBtn: document.getElementById("calcBtn"),
+                    calcBtnLabel: document.getElementById("calcBtnLabel"),
+                    resultArea: document.getElementById("resultArea"),
+                    recommendation: document.getElementById("recommendation"),
+                    recIcon: document.getElementById("recIcon"),
+                    recSvg: document.getElementById("recSvg"),
+                    recTitle: document.getElementById("recTitle"),
+                    recText: document.getElementById("recText"),
+                    recBadge: document.getElementById("recBadge"),
+                    recBadgeText: document.getElementById("recBadgeText"),
+                    totalBuildDisplay:
+                        document.getElementById("totalBuildDisplay"),
+                    buildPeriod: document.getElementById("buildPeriod"),
+                    buildCostDisplay:
+                        document.getElementById("buildCostDisplay"),
+                    maintenanceMonthlyDisplay: document.getElementById(
+                        "maintenanceMonthlyDisplay",
+                    ),
+                    maintenanceTotalDisplay: document.getElementById(
+                        "maintenanceTotalDisplay",
+                    ),
+                    totalSubDisplay: document.getElementById("totalSubDisplay"),
+                    subPeriod: document.getElementById("subPeriod"),
+                    algoToggle: document.getElementById("algoToggle"),
+                    algoContent: document.getElementById("algoContent"),
+                    algoChevron: document.getElementById("algoChevron"),
+                };
+
+                // ── Detect currency from device locale/timezone ─────────
+                var tzCurrencyMap = {
+                    'America/New_York': 'USD', 'America/Chicago': 'USD', 'America/Denver': 'USD',
+                    'America/Los_Angeles': 'USD', 'America/Phoenix': 'USD', 'America/Anchorage': 'USD',
+                    'Pacific/Honolulu': 'USD',
+                    'Europe/London': 'GBP',
+                    'Europe/Paris': 'EUR', 'Europe/Berlin': 'EUR', 'Europe/Rome': 'EUR',
+                    'Europe/Madrid': 'EUR', 'Europe/Amsterdam': 'EUR', 'Europe/Brussels': 'EUR',
+                    'Europe/Vienna': 'EUR', 'Europe/Dublin': 'EUR', 'Europe/Helsinki': 'EUR',
+                    'Europe/Lisbon': 'EUR', 'Europe/Athens': 'EUR',
+                    'Europe/Zurich': 'CHF',
+                    'Asia/Kolkata': 'INR', 'Asia/Calcutta': 'INR',
+                    'Asia/Singapore': 'SGD',
+                    'Asia/Jakarta': 'IDR',
+                    'Asia/Tokyo': 'JPY',
+                    'Asia/Shanghai': 'CNY', 'Asia/Hong_Kong': 'CNY',
+                    'Asia/Ho_Chi_Minh': 'VND', 'Asia/Saigon': 'VND',
+                    'Australia/Sydney': 'AUD', 'Australia/Melbourne': 'AUD', 'Australia/Perth': 'AUD',
+                    'America/Toronto': 'CAD', 'America/Vancouver': 'CAD',
+                    'America/Mexico_City': 'MXN',
+                    'America/Sao_Paulo': 'BRL',
+                };
+
+                function detectCurrency() {
+                    try {
+                        var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                        if (tz && tzCurrencyMap[tz]) return tzCurrencyMap[tz];
+                    } catch(e) {}
+                    return 'USD';
+                }
+
+                var detectedCurrency = detectCurrency();
+                var def = currencyDefaults[detectedCurrency];
+                if (def) {
+                    state.currency = detectedCurrency;
+                    state.hourlyRate = def.hourlyRate;
+                    state.subscriptionCost = def.subscription;
+                    el.hourlyRate.value = def.hourlyRate;
+                    el.subscriptionCost.value = def.subscription;
+                    el.hourlyRatePrefix.textContent = currencies.filter(function(c){ return c.code === detectedCurrency; })[0].symbol;
+                    el.subscriptionPrefix.textContent = el.hourlyRatePrefix.textContent;
+                }
+
+                // ── Populate currency select ─────────────────────────────
+                currencies.forEach(function (c) {
+                    var opt = document.createElement("option");
+                    opt.value = c.code;
+                    opt.textContent =
+                        c.symbol + " " + c.name + " (" + c.code + ")";
+                    if (c.code === state.currency) opt.selected = true;
+                    el.currency.appendChild(opt);
+                });
+
+                // ── Helpers ──────────────────────────────────────────────
+                function getSymbol() {
+                    var found = currencies.filter(function (c) {
+                        return c.code === state.currency;
+                    });
+                    return found.length ? found[0].symbol : "$";
+                }
+
+                function stepFor(base) {
+                    switch (state.currency) {
+                        case "IDR":
+                        case "VND":
+                            return base * 10000;
+                        case "JPY":
+                        case "CNY":
+                            return base * 100;
+                        case "INR":
+                            return base * 50;
+                        case "MXN":
+                            return base * 10;
+                        case "BRL":
+                            return base * 5;
+                        default:
+                            return base;
+                    }
+                }
+
+                function setSpeech(text, type) {
+                    el.speechText.textContent = text;
+                    el.catSpeech.className =
+                        "cat-speech" + (type ? " " + type : "");
+                }
+
+                function setSpeechThinking() {
+                    el.catSpeech.classList.add("thinking");
+                }
+
+                function clearSpeechThinking() {
+                    el.catSpeech.classList.remove("thinking");
+                }
+
+                // ── Calculation ──────────────────────────────────────────
+                function calculate() {
+                    var hr = state.hourlyRate;
+                    var bt = state.buildTime;
+                    var mh = state.maintenanceHours;
+                    var sc = state.subscriptionCost;
+                    var tf = state.timeframe;
+
+                    var buildCost = hr * bt;
+                    var maintenanceCostPerMonth = hr * mh;
+                    var totalMaintenanceCost = maintenanceCostPerMonth * tf;
+                    var totalBuildCost = buildCost + totalMaintenanceCost;
+                    var totalSubscriptionCost = sc * tf;
+                    var savings = totalBuildCost - totalSubscriptionCost;
+                    var breakEvenMonths =
+                        sc - mh * hr !== 0
+                            ? buildCost / (sc - mh * hr)
+                            : Infinity;
+                    var recommendation = savings > 0 ? "subscribe" : "build";
+
+                    return {
+                        buildCost: buildCost,
+                        maintenanceCostPerMonth: maintenanceCostPerMonth,
+                        totalMaintenanceCost: totalMaintenanceCost,
+                        totalBuildCost: totalBuildCost,
+                        totalSubscriptionCost: totalSubscriptionCost,
+                        savings: savings,
+                        breakEvenMonths: breakEvenMonths,
+                        recommendation: recommendation,
+                    };
+                }
+
+                // ── Render results ───────────────────────────────────────
+                function render(r) {
+                    var sym = getSymbol();
+                    var isSub = r.recommendation === "subscribe";
+
+                    el.recommendation.className =
+                        "recommendation " + (isSub ? "subscribe" : "build");
+                    el.recIcon.className =
+                        "rec-icon " + (isSub ? "subscribe" : "build");
+
+                    var checkPath = "M5 13l4 4L19 7";
+                    var buildPath =
+                        "M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z";
+                    el.recSvg.innerHTML =
+                        '<path stroke-linecap="round" stroke-linejoin="round" d="' +
+                        (isSub ? checkPath : buildPath) +
+                        '"/>';
+
+                    var color = isSub
+                        ? "var(--subscribe-color)"
+                        : "var(--build-color)";
+                    el.recTitle.style.color = color;
+                    el.recTitle.textContent = isSub
+                        ? "Subscribe"
+                        : "Build It Yourself";
+
+                    el.recText.style.color = color;
+                    var absSavings = Math.abs(r.savings);
+                    el.recText.textContent = isSub
+                        ? "You'll save " +
+                          sym +
+                          absSavings.toLocaleString() +
+                          " over " +
+                          state.timeframe +
+                          " months by subscribing."
+                        : "You'll save " +
+                          sym +
+                          absSavings.toLocaleString() +
+                          " over " +
+                          state.timeframe +
+                          " months by building.";
+
+                    var bem = r.breakEvenMonths;
+                    if (!isNaN(bem) && isFinite(bem) && bem > 0) {
+                        el.recBadge.style.display = "inline-flex";
+                        el.recBadge.className =
+                            "rec-badge " + (isSub ? "subscribe" : "build");
+                        var badgeText;
+                        if (isSub && bem > state.timeframe) {
+                            badgeText =
+                                "Building would break even after " +
+                                Math.round(bem) +
+                                " months";
+                        } else if (!isSub && bem < state.timeframe) {
+                            badgeText =
+                                "Subscribing would break even at " +
+                                Math.round(bem) +
+                                " months";
+                        } else {
+                            badgeText =
+                                "Break-even point: " +
+                                Math.round(bem) +
+                                " months";
+                        }
+                        el.recBadgeText.textContent = badgeText;
+                    } else {
+                        el.recBadge.style.display = "none";
+                    }
+
+                    el.totalBuildDisplay.textContent =
+                        sym + r.totalBuildCost.toLocaleString();
+                    el.buildPeriod.textContent =
+                        "over " + state.timeframe + " months";
+                    el.buildCostDisplay.textContent =
+                        sym + r.buildCost.toLocaleString();
+                    el.maintenanceMonthlyDisplay.textContent =
+                        sym +
+                        r.maintenanceCostPerMonth.toLocaleString() +
+                        "/mo";
+                    el.maintenanceTotalDisplay.textContent =
+                        sym + r.totalMaintenanceCost.toLocaleString();
+                    el.totalSubDisplay.textContent =
+                        sym + r.totalSubscriptionCost.toLocaleString();
+                    el.subPeriod.textContent =
+                        "over " + state.timeframe + " months";
+                }
+
+                // ── Calculate button ─────────────────────────────────────
+                el.calcBtn.addEventListener("click", function () {
+                    clearTimeout(typingTimeout);
+
+                    state.hourlyRate = parseFloat(el.hourlyRate.value) || 0;
+                    state.buildTime = parseFloat(el.buildTime.value) || 0;
+                    state.maintenanceHours =
+                        parseFloat(el.maintenanceHours.value) || 0;
+                    state.subscriptionCost =
+                        parseFloat(el.subscriptionCost.value) || 0;
+                    state.timeframe = parseFloat(el.timeframe.value) || 12;
+
+                    el.resultArea.classList.remove("visible");
+                    el.calcBtn.disabled = true;
+
+                    setCatState3D("thinking");
+                    clearSpeechThinking();
+                    setSpeech("Crunching the numbers...", "");
+                    setSpeechThinking();
+
+                    setTimeout(function () {
+                        var r = calculate();
+                        render(r);
+
+                        clearSpeechThinking();
+                        setCatState3D("happy");
+                        var isSub = r.recommendation === "subscribe";
+                        setSpeech(
+                            isSub
+                                ? "Subscribe wins! Save that money!"
+                                : "Build it yourself! You got this!",
+                            isSub ? "verdict" : "verdict build-verdict",
+                        );
+
+                        setTimeout(function () {
+                            el.resultArea.classList.add("visible");
+                            el.calcBtn.disabled = false;
+                            el.calcBtnLabel.textContent = "Recalculate";
+                            hasCalculated = true;
+                        }, 400);
+                    }, 1500);
+                });
+
+                // ── Currency change ──────────────────────────────────────
+                el.currency.addEventListener("change", function (e) {
+                    state.currency = e.target.value;
+                    var def = currencyDefaults[state.currency];
+                    if (def) {
+                        state.hourlyRate = def.hourlyRate;
+                        state.subscriptionCost = def.subscription;
+                        el.hourlyRate.value = def.hourlyRate;
+                        el.subscriptionCost.value = def.subscription;
+                    }
+                    var sym = getSymbol();
+                    el.hourlyRatePrefix.textContent = sym;
+                    el.subscriptionPrefix.textContent = sym;
+                    el.hourlyRate.step = stepFor(5);
+                    el.subscriptionCost.step = stepFor(5);
+
+                    if (hasCalculated) {
+                        el.resultArea.classList.remove("visible");
+                        setCatState3D("idle");
+                        clearSpeechThinking();
+                        setSpeech("Currency changed! Let's recalculate!", "");
+                    }
+                });
+
+                // ── Algorithm toggle ─────────────────────────────────────
+                var algoOpen = false;
+                el.algoToggle.addEventListener("click", function () {
+                    algoOpen = !algoOpen;
+                    el.algoContent.classList.toggle("open", algoOpen);
+                    el.algoChevron.classList.toggle("open", algoOpen);
+                });
+
+                // ── Input typing detection ───────────────────────────────
+                var inputFields = [
+                    el.hourlyRate,
+                    el.buildTime,
+                    el.maintenanceHours,
+                    el.subscriptionCost,
+                    el.timeframe,
+                ];
+
+                inputFields.forEach(function (input) {
+                    input.addEventListener("input", function () {
+                        if (hasCalculated) {
+                            el.resultArea.classList.remove("visible");
+                            el.calcBtnLabel.textContent = "Calculate";
+                            hasCalculated = false;
+                        }
+
+                        clearTimeout(typingTimeout);
+                        setCatState3D("thinking");
+                        clearSpeechThinking();
+
+                        var messages = [
+                            "Ooh, interesting numbers!",
+                            "Hmm, let me think about that...",
+                            "Number crunching mode!",
+                            "Tell me more!",
+                            "Getting curious...",
+                        ];
+                        setSpeech(
+                            messages[
+                                Math.floor(Math.random() * messages.length)
+                            ],
+                            "",
+                        );
+
+                        typingTimeout = setTimeout(function () {
+                            setCatState3D("idle");
+                            setSpeech("Ready when you are! Hit Calculate!", "");
+                        }, 1500);
+                    });
+                });
+
+                // ── Dark mode ────────────────────────────────────────────
+                var themeToggle = document.getElementById("themeToggle");
+                var prefersDark = window.matchMedia(
+                    "(prefers-color-scheme: dark)",
+                ).matches;
+                var savedTheme = localStorage.getItem("theme");
+
+                if (savedTheme === "dark" || (!savedTheme && prefersDark)) {
+                    document.documentElement.classList.add("dark");
+                }
+
+                themeToggle.addEventListener("click", function () {
+                    document.documentElement.classList.toggle("dark");
+                    var isDark =
+                        document.documentElement.classList.contains("dark");
+                    localStorage.setItem("theme", isDark ? "dark" : "light");
+                });
+            })();
+        </script>
+    </body>
+</html>
