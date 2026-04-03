@@ -46,7 +46,7 @@ jobs:
       - name: Deploy to DigitalOcean
         run: |
           TS=$(date +%Y%m%d%H%M%S)
-          REMOTE_RELEASE="/srv/suborbuild/releases/$TS"
+          REMOTE_RELEASE="${{ secrets.DO_DEPLOY_PATH }}/releases/$TS"
           SSH="ssh -p ${{ secrets.DO_PORT }} ${{ secrets.DO_USER }}@${{ secrets.DO_HOST }}"
 
           $SSH "mkdir -p $REMOTE_RELEASE"
@@ -58,6 +58,6 @@ jobs:
             -e "ssh -p ${{ secrets.DO_PORT }}" \
             ./ "${{ secrets.DO_USER }}@${{ secrets.DO_HOST }}:$REMOTE_RELEASE/"
 
-          $SSH "ln -sfn $REMOTE_RELEASE /srv/suborbuild/current && ls -1dt /srv/suborbuild/releases/* | tail -n +8 | xargs -r rm -rf"
+          $SSH "ln -sfn $REMOTE_RELEASE ${{ secrets.DO_DEPLOY_PATH }}/current && ls -1dt ${{ secrets.DO_DEPLOY_PATH }}/releases/* | tail -n +8 | xargs -r rm -rf"
 
           echo "✓ Deployed to /srv/suborbuild/current"
